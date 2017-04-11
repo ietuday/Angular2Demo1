@@ -1,0 +1,1644 @@
+<vxml version="2.1" xmlns="http://www/w3/org/2001/vxml" xml:lang="en-US">
+    <var name="numberToDial" expr="'<%=numberToDial%>'"/>
+    <var name="smartphone_ani" expr="'<%=smartphone_ani%>'"/>
+    <var name="appName" expr="'<%=appName%>'"/>
+    <var name="logType" expr="'<%=logType%>'" />
+    <var name="smartphone_dnis"/>
+    <var name="smartphone_cdr" expr="'<%=smartphone_cdr%>'"/>
+    <var name="noinputCount" expr="0"/>
+    <var name="nomatchCount" expr="0"/>
+    <var name="portname" expr="'<%=portname%>'"/>
+    <var name="audioFileName" expr="'<%=audioFileName%>'"/>
+    <var name="exitState" expr="'<%=exitState%>'"/>
+    <var name="exitType" expr="'Hangup'"/>
+    <var name="outcome" expr="'<%=outcome%>'"/>
+    <var name="audioLocation" expr=""/>
+    <var name="fldInputSave" expr=""/>
+    <var name="loopCounter" expr="'0'"/>
+    <var name="specialTransferVDN" expr="'<%=specialTransferVDN%>'"/>
+    <var name="TechSupportXfer" expr=""/>
+    <var name="callBackURL"/>
+    <var name="audioPhrase" expr="''"/>
+    <var name="audioPhrase_1" expr="''"/>
+    <var name="pageName" expr="''"/>
+    <!--<var name="recordedFileName" expr="'http:\/\/192.168.10.111:8080\/VivintVivr2\/audios\/audio_en-us_nomatch_20151229-07405707_245.wav'"/>-->
+    <var name="recordedFileName" expr="''"/>
+    <var name="appUrl" expr="'<%=webServer%><%=appName%>'"/>
+    <var name="callBackJSP" expr="'<%=webServer%><%=appName%>/vxml/decision.jsp'"/>
+    <var name="CheckifMobileJSP" expr="'<%=webServer%><%=appName%>/vxml/CheckIfMobile.jsp'"/>
+    <var name="jsonFile" expr="'<%=webServer%><%=appName%>/js/grammar.js'"/>
+    <var name="status" expr="'pending'"/>
+    <var name="grammarName"/>
+    <var name="systemname" expr="'<%=systemname%>'"/>
+    <var name="logMessage" expr="'<%=logMessage%>'"/>
+    <var name="vxmlError" expr="''"/>
+    <var name="primaryGateway" expr="'<%=primaryGateway%>'"/>
+    <var name="secondaryGateway" expr="'<%=secondaryGateway%>'"/>
+    <var name="defaultVDN" expr="'<%=defaultVDN%>'"/>
+    <var name="specialVDN1" expr="'<%=specialVDN1%>'"/>
+    <var name="specialVDN2" expr="'<%=specialVDN2%>'"/>
+    <var name="specialVDN3" expr="'<%=specialVDN3%>'"/>
+    <var name="specialVDN4" expr="'<%=specialVDN4%>'"/>
+    <var name="specialVDN5" expr="'<%=specialVDN5%>'"/>
+    <var name="specialVDN6" expr="'<%=specialVDN6%>'"/>
+    <var name="specialVDN7" expr="'<%=specialVDN7%>'"/>
+    <var name="specialVDN8" expr="'<%=specialVDN8%>'"/>
+    <var name="specialVDN9" expr="'<%=specialVDN9%>'"/>
+    <var name="specialVDN10" expr="'<%=specialVDN10%>'"/>
+    <var name="specialVDN11" expr="'<%=specialVDN11%>'"/>
+    <var name="specialVDN12" expr="'<%=specialVDN12%>'"/>
+    <var name="specialVDN13" expr="'<%=specialVDN13%>'"/>
+    <var name="specialVDN14" expr="'<%=specialVDN14%>'"/>
+    <var name="cancelFlag" expr="false"/>
+    <var name="newFlag" expr="false"/>
+    <var name="billingFlag" expr="false"/>
+
+    <var name="custLoyalty1" expr="'<%=custLoyalty1%>'"/>
+    <var name="custLoyalty2" expr="'<%=custLoyalty2%>'"/>
+    <var name="custLoyalty3" expr="'<%=custLoyalty3%>'"/>
+    <var name="custLoyalty4" expr="'<%=custLoyalty4%>'"/>
+    <var name="custLoyalty5" expr="'<%=custLoyalty5%>'"/>
+    <var name="custLoyalty6" expr="'<%=custLoyalty6%>'"/>
+    <var name="custLoyalty7" expr="'<%=custLoyalty7%>'"/>
+
+    <var name="noinputVDN" expr="'<%=noinputVDN%>'"/>
+    <var name="cameraVDN" expr="'<%=cameraVDN%>'"/>
+    <var name="spanishVDN" expr="'<%=spanishVDN%>'"/>
+    <var name="pageName" expr="'main'"/>
+    <var name="inputValue" expr="''"/>
+    <var name="callActive" expr="''"/>
+    <var name="transferStaus" expr="''"/>
+    <var name="waitForAgentCounter" expr="'200'"/> <!-- wait for agent availability and response for 1 min-->
+
+    <catch event="error.badfetch">
+        <log label="badfetch" expr="smartphone_cdr+'|vxmlError:'+'badfetch in decision.jsp'"> Caught error.badfetch in decision.jsp</log>
+        <assign name="numberToDial" expr="defaultVDN"/>
+        <assign name="audioFileName" expr="'gotitTransfer_2.ulaw'"/>
+        <goto next="#frmTransfer"/>   
+    </catch>
+
+    <error>       
+        <assign name="vxmlError" expr="_event" />
+        <log label="Vxml Error" expr="smartphone_cdr+'|vxmlError:'+vxmlError"> Caught VXML Error in decision.jsp</log>
+        <assign name="audioFileName" expr="'gotitTransfer_2.ulaw'"/>
+        <assign name="numberToDial" expr="defaultVDN"/>
+        <goto next="#frmTransfer"/>        
+    </error>
+    <catch event="connection.disconnect.hangup">
+        <assign name="vxmlError" expr="_event" />
+        <!--<log expr="'VVR|'+logType+'|WEB|2400|'+systemname+'|'+smartphone_cdr+'|'+portname+'|'+'Caught Disconnect decision.jsp'+'|'+appName+'|[vxmlError:'+vxmlError+','+logMessage +']'"></log>-->
+        <log expr="vxmlError">General connection.disconnect.hangup</log>
+        <goto next="#logHangupCEV" />
+        <!--<exit/>-->
+    </catch>
+
+    <!--frmsalesForce (Call will land in this form firstly)-->
+    <form id="frmsalesForce">
+
+        <object classid = "CDR_CustomEvent" name="frmMainMenu">
+            <param name = "ARC_param_cevData" expr = "':24::VivintVIVR::state=<%=state%>'" /> 			
+            <param name = "ARC_param_cevEndOfData" value = "1" />
+            <param name = "ARC_param_cevDataType" value = "CEV_STRING" />
+        </object>
+
+        <block>
+            <if cond="logType == 'V' || logType == 'v'">
+                <log expr="'VVR|'+logType+'|WEB|2400|'+systemname+'|'+smartphone_cdr+'|'+portname+'|'+'Inside frmsalesForce of decision.jsp'+'|'+appName+logMessage"></log>
+            </if>
+
+        </block>
+        <object name="GetValue" classid="TEL_GetGlobalString">
+            <param name="ARC_param_globalVariable" value="$DISCONNECT_TIME" />
+        </object> 
+        <block>
+            <assign name="callActive" expr="GetValue.value" />
+            <if cond="callActive != '-1'">
+                <goto next="#logHangupCEV"/>
+            </if>
+        </block>
+        <!--<property name="inputmodes" value="dtmf"/>-->
+        <field name="fldInput">
+            <property name="termchar" value="#"/> 
+            <grammar type="application/srgs+xml" src="../grammars/language.grxml"/>
+            <property name="incompletetimeout" value="500ms"/>
+            <prompt timeout="3s">
+                <audio src="../audios/_Welcome.ulaw"/>
+            </prompt>
+        </field>
+        <filled>
+            <if cond="fldInput == '8'">
+                <assign name="numberToDial" expr="spanishVDN"/>
+                <prompt bargein="false">
+                    <audio src="../audios/Entiendo.wav"/>
+                </prompt>
+                <goto next="#frmTransfer"/>
+                <else/>
+                <goto next="#frmCheckVivintAPI"/>
+            </if>
+        </filled>
+        <noinput>
+            <assign name="nomatchCount" expr="0"/>
+            <assign name="nomatchCount" expr="0"/>
+            <goto next="#frmCheckVivintAPI"/>
+        </noinput>
+        <nomatch>
+
+            <goto next="#frmCheckVivintAPI"/>
+        </nomatch>
+
+        <catch event="connection.disconnect.hangup">
+            <log label="VivintIVR|Hangup" expr="smartphone_cdr"> Caught Disconnect </log>
+            <goto next="#logHangupCEV" />
+        </catch>
+    </form>
+
+    <!--frmFalseAlarmOrEmergencyNoInput_2 (FalseAlarmOrEmergency Pass-2)-->        
+    <form id="frmFalseAlarmOrEmergencyNoInput_2">
+        <property name="completetimeout" value="0.1s"/>
+        <property name="incompletetimeout" value="1s"/>
+        <object name="GetValue" classid="TEL_GetGlobalString">
+            <param name="ARC_param_globalVariable" value="$DISCONNECT_TIME" />
+        </object> 
+        <block>
+            <assign name="callActive" expr="GetValue.value" />
+            <if cond="callActive != '-1'">
+                <goto next="#logHangupCEV"/>
+            </if>
+        </block>
+        <block>
+            <assign name="exitState" expr="'FalseAlarmOrEmergencyNoInput_2'"/>
+            <goto next="#frmCheckVivintAPI"/>
+        </block>
+
+    </form>
+
+    <!--frmTransfer (All transfers)-->
+    <form id="frmTransfer">
+        <catch event="connection.disconnect.hangup">
+            <!--do nothing-->
+            <goto next="#logHangupCEV"/>
+        </catch>
+        <!--        <object classid = "CDR_CustomEvent" name="frmtransferCEV1">
+                    <param name = "ARC_param_cevData" expr = "':24::VivintVIVR::outcome=transfer to agent'+numberToDial+primaryGateway+'$$$aa_finalActionTaken=transfer to agent'+numberToDial+primaryGateway+'$$$exitType=TRANSFER$$$exitState='+exitState+'_XFER'" />
+                    <param name = "ARC_param_cevEndOfData" value = "1" />
+                    <param name = "ARC_param_cevDataType" value = "CEV_STRING" />
+                </object>-->
+        <object name="GetValue" classid="TEL_GetGlobalString">
+            <param name="ARC_param_globalVariable" value="$DISCONNECT_TIME" />
+        </object> 
+        <block>
+            <assign name="callActive" expr="GetValue.value" />
+            <if cond="callActive != '-1'">
+                <goto next="#logHangupCEV"/>
+            </if>
+        </block>
+        <block>
+            <prompt timeout="1s" bargein="false">
+                <audio expr="'../audios/'+audioFileName" /> 
+            </prompt>
+        </block>
+
+        <object name="setGlobal_RecordCall" classid="TEL_SetGlobalString">
+            <param name="ARC_param_globalVariable" value="$STOP_RECORD_CALL"/>
+            <param name="ARC_param_globalVariableValue" value="/home/arc/audio/smartphone_cdr+'.wav'"/>
+        </object>
+        <transfer destexpr = "numberToDial+primaryGateway" connecttimeout = "5s" bridge = "false" name = "trTest1">
+            <filled>
+
+            </filled>
+            <catch event = "connection.disconnect.transfer">
+                <assign name="transferStaus" expr="_event" />
+                <log expr="transferStaus">call successfully transfered primary Getway</log>
+                <goto next="#frmCEVPrimaryGateway"/>
+            </catch>
+            <!--            <catch event = "telephone.disconnect.transfer">
+                            <assign name="transferStaus" expr="_event" />
+                            <log expr="transferStaus">call successfully transfered primary Getway</log>
+                        </catch>-->
+            <catch event = "error">
+                <assign name="transferStaus" expr="_event" />
+                <log expr="transferStaus">failed transfer to transfer primary getway</log>
+                <goto next="#frmTransferSecondaryGateway"/>
+            </catch>
+            <catch event = "error.connection.baddestination">
+                <assign name="transferStaus" expr="_event" />
+                <log expr="transferStaus">failed transfer to transfer primary getway because of baddestination</log>
+                <goto next="#frmTransferSecondaryGateway"/>
+            </catch>
+
+        </transfer>
+    </form>
+
+    <form id="frmTransferSecondaryGateway">
+        <object name="GetValue" classid="TEL_GetGlobalString">
+            <param name="ARC_param_globalVariable" value="$DISCONNECT_TIME" />
+        </object> 
+        <block>
+            <assign name="callActive" expr="GetValue.value" />
+            <if cond="callActive != '-1'">
+                <goto next="#logHangupCEV"/>
+            </if>
+        </block>
+        <object name="setGlobal_RecordCall" classid="TEL_SetGlobalString">
+            <param name="ARC_param_globalVariable" value="$STOP_RECORD_CALL"/>
+            <param name="ARC_param_globalVariableValue" value="/home/arc/audio/smartphone_cdr+'.wav'"/>
+        </object>
+        <transfer destexpr = "numberToDial+secondaryGateway" connecttimeout = "5s" bridge = "false" name = "trTest1">
+            <filled>
+
+            </filled>
+            <catch event = "connection.disconnect.transfer">
+                <assign name="transferStaus" expr="_event" />
+                <log expr="transferStaus">inside transfer disconnect</log>
+                <goto next="#frmCEVSecondaryGateway"/>
+            </catch>
+            <catch event = "telephone.disconnect.transfer">
+                <assign name="transferStaus" expr="_event" />
+                <log expr="transferStaus">inside telephone transfer disconnect</log>
+            </catch>
+            <catch event = "error">
+                <assign name="transferStaus" expr="_event" />
+                <log expr="transferStaus">failed secondary getway </log>
+
+            </catch>
+            <catch event = "error.connection.baddestination">
+                <assign name="transferStaus" expr="_event" />
+                <log expr="transferStaus">failed secondary getway</log>
+
+            </catch>
+        </transfer>
+    </form>
+
+    <!--frmCheckVivintAPI-->        
+    <form id="frmCheckVivintAPI">
+        <catch event="error.badfetch">
+            <log expr="'VVR|'+logType+'|WEB|2400|'+systemname+'|'+smartphone_cdr+'|'+portname+'|'+'Inside error.badfetch of frmCheckVivintAPI of decision.jsp subdialog to GetTelcoTransferExtension.jsp'+'|'+appName+logMessage"></log>
+            <goto next="#frmhowMayIHelpYou"/>
+        </catch>
+        <catch event="connection.disconnect.hangup">
+            <goto next="#logHangupCEV" />
+        </catch>
+        <object name="GetValue" classid="TEL_GetGlobalString">
+            <param name="ARC_param_globalVariable" value="$DISCONNECT_TIME" />
+        </object>
+        <property name="completetimeout" value="0.1s"/>
+        <property name="incompletetimeout" value="1s"/>
+
+
+        <block>
+            <assign name="callActive" expr="GetValue.value" />
+            <if cond="callActive != '-1'">
+                <goto next="#logHangupCEV"/>
+            </if>
+            <assign name="exitState" expr="'CheckVivintAPI'"/>
+        </block>
+
+        <!-- Get Possible Transfer number from Vivint API  -->
+
+        <var name="ani" expr="'<%=smartphone_ani%>'"/>
+        <var name="smartphone_cdr" expr="'<%=smartphone_cdr%>'"/>
+        <subdialog 
+            name="getvdn" 
+            method="post" 
+            src="<%=webServer%><%=appName%>/vxml/GetTelcoTransferExtension.jsp"
+            namelist="ani smartphone_cdr">
+
+            <filled>
+                <assign name="specialTransferVDN" expr="getvdn.VDN" />
+                <!--<assign name="specialTransferVDN" expr="specialVDN14" />-->
+                <if cond="specialTransferVDN &gt; 0">
+
+                    <if cond = "specialTransferVDN == specialVDN1">
+                        <assign name="numberToDial" expr="specialTransferVDN"/>
+                        <goto next="#frmAlarmActive" />
+                        <elseif cond = "specialTransferVDN == specialVDN2"/>
+                        <assign name="audioFileName" expr="'gotitTransfer_2.ulaw'"/>
+                        <assign name="numberToDial" expr="specialTransferVDN"/>
+                        <goto next="#frmTransfer" />
+                        <elseif cond = "specialTransferVDN == specialVDN3"/>
+                        <assign name="audioFileName" expr="'gotitTransfer_2.ulaw'"/>
+                        <assign name="numberToDial" expr="specialTransferVDN"/>
+                        <goto next="#frmTransfer" />
+                        <elseif cond = "specialTransferVDN == specialVDN4"/>
+                        <assign name="audioFileName" expr="'gotitTransfer_2.ulaw'"/>
+                        <assign name="numberToDial" expr="specialTransferVDN"/>
+                        <goto next="#frmTransfer" />
+                        <elseif cond = "specialTransferVDN == specialVDN5"/>
+                        <assign name="audioFileName" expr="'gotitTransfer_2.ulaw'"/>
+                        <assign name="numberToDial" expr="specialTransferVDN"/>
+                        <goto next="#frmhowMayIHelpYou"/>
+                        <elseif cond = "specialTransferVDN == specialVDN6"/>
+                        <assign name="audioFileName" expr="'gotitTransfer_2.ulaw'"/>
+                        <assign name="numberToDial" expr="specialTransferVDN"/>
+                        <goto next="#frmhowMayIHelpYou"/>
+                        <elseif cond = "specialTransferVDN == specialVDN7"/>
+                        <assign name="audioFileName" expr="'gotitTransfer_2.ulaw'"/>
+                        <assign name="numberToDial" expr="specialTransferVDN"/>
+                        <goto next="#frmhowMayIHelpYou"/>
+                        <elseif cond = "specialTransferVDN == specialVDN8"/>
+                        <assign name="audioFileName" expr="'gotitTransfer_2.ulaw'"/>
+                        <assign name="numberToDial" expr="specialTransferVDN"/>
+                        <goto next="#frmhowMayIHelpYou"/>
+                        <elseif cond = "specialTransferVDN == specialVDN9"/>
+                        <assign name="audioFileName" expr="'gotitTransfer_2.ulaw'"/>
+                        <assign name="numberToDial" expr="specialTransferVDN"/>
+                        <goto next="#frmhowMayIHelpYou"/>
+                        <elseif cond = "specialTransferVDN == specialVDN10"/>
+                        <assign name="audioFileName" expr="'gotitTransfer_2.ulaw'"/>
+                        <assign name="numberToDial" expr="specialTransferVDN"/>
+                        <goto next="#frmhowMayIHelpYou"/>
+                        <elseif cond = "specialTransferVDN == specialVDN11"/>
+                        <assign name="cancelFlag" expr="true"/>
+                        <goto next="#frmhowMayIHelpYou"/>
+                        <elseif cond = "specialTransferVDN == specialVDN12"/>
+                        <!--<assign name="cancelFlag" expr="true"/>-->
+                        <goto next="#frmhowMayIHelpYou"/>
+                        <elseif cond = "specialTransferVDN == specialVDN13"/>
+                        <assign name="newFlag" expr="true"/>
+                        <goto next="#frmhowMayIHelpYou"/>
+                        <elseif cond = "specialTransferVDN == specialVDN14"/>
+                        <assign name="billingFlag" expr="true"/>
+                        <!--                        <prompt>
+                                                    inside billing vdn<value expr="billingFlag"/>
+                                                </prompt>-->
+                        <goto next="#frmhowMayIHelpYou"/>
+                    </if>
+                    <assign name="audioFileName" expr="'gotitTransfer_2.ulaw'"/>
+                    <assign name="numberToDial" expr="specialTransferVDN"/>
+                    <goto next="#frmTransfer" />
+                </if>
+
+                <goto next="#frmhowMayIHelpYou"/>
+            </filled>
+        </subdialog>
+
+    </form>
+
+
+    <!--frmAlarmActive-->        
+    <form id="frmAlarmActive">
+        <object name="GetValue" classid="TEL_GetGlobalString">
+            <param name="ARC_param_globalVariable" value="$DISCONNECT_TIME" />
+        </object> 
+        <block>
+            <assign name="callActive" expr="GetValue.value" />
+            <if cond="callActive != '-1'">
+                <goto next="#logHangupCEV"/>
+            </if>
+        </block>
+        <catch event="connection.disconnect.hangup">
+            <goto next="#logHangupCEV" />
+        </catch>
+        <property name="completetimeout" value="0.1s"/>
+        <property name="incompletetimeout" value="1s"/>
+        <block>
+            <assign name="exitState" expr="'AlarmActive'"/>
+        </block>
+        <field name="alarmVal">
+
+            <grammar type="application/srgs+xml" src="../grammars/falseAlarmAgent.grxml"/>
+
+            <prompt bargein="true" timeout="5s">
+                <audio src="../audios/_FalseAlarmOrEmergency_2.ulaw" />
+            </prompt>
+            <filled>
+                <if cond = "alarmVal == 'Yes'">
+                    <assign name="audioFileName" expr="'_GotitTransfer_2.ulaw'"/>
+                    <goto next="#frmTransfer"/>
+                    <else/>
+                    <goto next="#frmhowMayIHelpYou"/>
+                </if>
+
+
+            </filled>
+        </field>
+        <noinput>
+            <assign name="loopCounter" expr="loopCounter + 1"/>
+            <!-- Transfer to Billing Default -->
+            <if cond = "loopCounter &gt; 0">
+                <assign name="numberToDial" expr="defaultVDN"/>
+                <assign name="audioFileName" expr="'_Transfer_2.ulaw'"/>
+                <goto next="#frmTransfer"/>
+            </if>
+
+            <prompt bargein="false" timeout="1s">
+                <audio src="../audios/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmAlarmActive"/>
+        </noinput>
+        <nomatch>
+            <assign name="loopCounter" expr="loopCounter + 1"/>
+
+            <!-- Transfer to customer Loyalty Default -->
+            <if cond = "loopCounter &gt; 2">
+                <assign name="numberToDial" expr="defaultVDN"/>
+                <assign name="audioFileName" expr="'_Transfer_2.ulaw'"/>
+                <goto next="#frmTransfer"/>
+            </if>
+
+            <prompt bargein="false" timeout="1s">
+                <audio src="../audios/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmAlarmActive"/>
+        </nomatch>
+    </form>
+
+
+    <!--frmhowMayIHelpYou (howMayIHelpYou Initial Form)-->        
+    <form id="frmhowMayIHelpYou">
+        <object name="GetValue" classid="TEL_GetGlobalString">
+            <param name="ARC_param_globalVariable" value="$DISCONNECT_TIME" />
+        </object> 
+        <block>
+            <assign name="callActive" expr="GetValue.value" />
+            <if cond="callActive != '-1'">
+                <goto next="#logHangupCEV"/>
+            </if>
+        </block>
+        <catch event="connection.disconnect.hangup">
+            <goto next="#logHangupCEV" />
+        </catch>
+        <property name="completetimeout" value="0.1s"/>
+        <property name="incompletetimeout" value="1s"/>
+        <block>
+            <assign name="exitState" expr="'howMayIHelpYou'"/>
+            <if cond = "loopCounter == 0">
+
+
+                <prompt bargein="false" timeout="7s">
+                    <audio src="/home/arc/.ISP/Telecom/Exec/silence_1024.64p" /> 
+                </prompt>
+                <prompt bargein="false">
+                    <audio src="../audios/Vivint_2.wav" />
+                </prompt>
+
+                <prompt bargein="<%=allowBargein%>" timeout="30s">
+                    <!--<audio src="../audios/MainMenuPrompt_1.wav" />-->
+                    <!--<audio src="../audios/Main_Menu_Options.wav" />-->
+                    <audio src="../audios/Updated_Main_Menu.wav" />
+                </prompt>
+
+                <else/>
+
+                <prompt bargein="true" timeout="30s">
+                    <!--<prompt bargein="true" timeout="7s">-->
+                    <!--                    <audio src="../audios/Main_Menu_Options.wav" />-->
+                    <audio src="../audios/Updated_Main_Menu.wav" />
+                </prompt>
+            </if>
+        </block>
+
+        <field name="fldInput">
+
+            <grammar type="application/srgs+xml" src="../grammars/main.grxml"/>
+
+            <filled>
+                <!--<prompt>inside filled</prompt>-->
+                <var name="utter" expr="fldInput$.utterance"/> 
+                <!--                <prompt>
+                                    input <value expr="utter"/>
+                                                </prompt>-->
+                <assign name="inputValue" expr="fldInput"/>
+                <if cond = "fldInput == 'disconnect' &amp;&amp; cancelFlag == true ">
+                    <assign name="numberToDial" expr="specialVDN11"/>
+                    <assign name="audioFileName" expr="'gotitTransfer_2.ulaw'"/>
+                    <goto next="#frmTransfer"/>
+                    <elseif cond = "fldInput == 'new_service' &amp;&amp; newFlag == true"/>
+                    <assign name="numberToDial" expr="specialVDN13"/>
+                    <assign name="audioFileName" expr="'gotitTransfer_2.ulaw'"/>
+                    <goto next="#frmTransfer"/>
+                    <elseif cond = "fldInput == 'billing' &amp;&amp; billingFlag == true"/>
+                    <assign name="numberToDial" expr="specialVDN14"/>
+                    <assign name="audioFileName" expr="'gotitTransfer_2.ulaw'"/>
+                    <goto next="#frmTransfer"/>
+                    <else/>
+                    <goto next="#frmProcessMenu"/>
+                </if>
+                <!--<goto next="#frmProcessMenu"/>-->
+                <!--Deleting below commented code [Ankush: 2016-01-15]
+                    
+                -->	
+            </filled>
+        </field>
+
+        <noinput>
+
+            <!--Transfer to Representative Default--> 
+            <assign name="loopCounter" expr="loopCounter+1"/>
+            <if cond = "loopCounter &gt; 0">
+                <assign name="numberToDial" expr="noinputVDN"/>
+                <assign name="audioFileName" expr="'_Transfer_2.ulaw'"/>
+                <goto next="#frmTransfer"/>
+            </if>
+            <prompt bargein="false" timeout="1s">
+                <audio src="../audios/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmhowMayIHelpYou"/>
+        </noinput>
+
+        <nomatch>
+            <assign name="loopCounter" expr="loopCounter+1"/>
+            <!-- Transfer to Representative Default -->
+            <if cond = "loopCounter &gt; 0">
+
+                <!--   call  InvokeAgentAPI here -->
+
+                <assign name="pageName" expr="'howMayIHelpYou'"/>
+                <assign name="recordedFileName" expr="application.lastresult$.utteranceFilename"/>
+                <assign name="grammarName" expr="'main.grxml'"/>
+                <assign name="audioPhrase" expr="'percolate60s_new.vox'"/>
+                <if cond="logType == 'V' || logType == 'v'">
+                    <log expr="'VVR|'+logType+'|WEB |'+'|'+'pageName:'+pageName+'|recordedFileName:'+recordedFileName+'|status:'+status+'|grammarName:'+grammarName+'|appUrl:'+appUrl+'|audioPhrase:'+audioPhrase+'|defaultVDN:'+defaultVDN+'|waitForAgentCounter:'+waitForAgentCounter+'|callBackJSP:'+callBackJSP+'|submit to InvokeAgentAPI.jsp from frmhowMayIHelpYou in decision.jsp'+'|'+logMessage + '|primaryGateway:'+primaryGateway"></log>
+                </if>
+                <submit next="<%=agentAssistURL%>InvokeAgentAPI.jsp" namelist="recordedFileName smartphone_cdr status grammarName pageName audioPhrase appUrl waitForAgentCounter defaultVDN callBackJSP specialTransferVDN primaryGateway secondaryGateway specialVDN11 cancelFlag specialVDN13 specialVDN14 newFlag billingFlag smartphone_ani"/>
+            </if>
+
+            <prompt bargein="false" timeout="1s">
+                <audio src="../audios/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmhowMayIHelpYou"/>
+        </nomatch>
+
+    </form>
+
+
+    <!--frmCustomerLoyalty-->        
+    <form id="frmCustomerLoyalty">
+        <object name="GetValue" classid="TEL_GetGlobalString">
+            <param name="ARC_param_globalVariable" value="$DISCONNECT_TIME" />
+        </object> 
+        <block>
+            <assign name="callActive" expr="GetValue.value" />
+            <if cond="callActive != '-1'">
+                <goto next="#logHangupCEV"/>
+            </if>
+        </block>
+        <catch event="connection.disconnect.hangup">
+            <goto next="#logHangupCEV" />
+        </catch>
+        <property name="completetimeout" value="0.1s"/>
+        <property name="incompletetimeout" value="1s"/>
+
+
+        <block>
+            <assign name="loopCounter" expr="0"/>
+            <assign name="exitState" expr="'CustomerLoyalty'"/>
+            <prompt bargein="true" timeout="30s">
+                <audio src="../audios/WhatHelp.ulaw" />
+            </prompt>
+        </block>
+        <field name="fldInput">
+            <grammar type="application/srgs+xml" src="../grammars/loyalty.grxml"/>
+
+
+
+
+            <filled>
+                <var name="utter" expr="fldInput$.utterance"/>
+
+                <if cond="fldInput == 'skill_1_84653'">
+                    <assign name="numberToDial" expr="custLoyalty1"/>
+                    <assign name="audioFileName" expr="'_GotitTransfer_2.ulaw'"/>
+                    <goto next="#frmTransfer"/>
+
+                    <elseif cond="fldInput == 'skill_1_84655'"/>
+                    <assign name="numberToDial" expr="custLoyalty2"/>
+                    <assign name="audioFileName" expr="'_GotitTransfer_2.ulaw'"/>
+                    <goto next="#frmTransfer"/>
+
+                    <elseif cond="fldInput == 'skill_1_84677'"/>
+                    <assign name="numberToDial" expr="custLoyalty3"/>
+                    <assign name="audioFileName" expr="'_GotitTransfer_2.ulaw'"/>
+                    <goto next="#frmTransfer"/>
+
+                    <elseif cond="fldInput == 'skill_1_84698'"/>
+                    <assign name="numberToDial" expr="specialVDN6"/>
+                    <assign name="audioFileName" expr="'_GotitTransfer_2.ulaw'"/>
+                    <goto next="#frmTransfer"/>
+
+                    <elseif cond="fldInput == 'skill_40_84651'"/>
+                    <assign name="numberToDial" expr="custLoyalty4"/>
+                    <assign name="audioFileName" expr="'_GotitTransfer_2.ulaw'"/>
+                    <goto next="#frmTransfer"/>
+
+                    <!--                    <elseif cond="fldInput == 'skill_20_84696'"/>
+                                        <assign name="numberToDial" expr="custLoyalty5"/>
+                                        <assign name="audioFileName" expr="'_GotitTransfer_2.ulaw'"/>
+                                        <goto next="#frmTransfer"/>-->
+
+                    <elseif cond = "fldInput == 'Agent'"/>
+                    <assign name="numberToDial" expr="custLoyalty6"/>
+                    <assign name="audioFileName" expr="'GotitTransfer_2.ulaw'"/>
+                    <goto next="#frmTransfer"/>
+
+                    <elseif cond = "fldInput == 'Test'"/>
+                    <assign name="numberToDial" expr="custLoyalty7"/>
+                    <assign name="audioFileName" expr="'GotitTransfer_2.ulaw'"/>
+                    <goto next="#frmTransfer"/>
+
+                    <else/>
+                    <throw event="nomatch"/>
+                </if>
+
+            </filled>
+        </field>
+
+        <noinput>
+            <assign name="loopCounter" expr="loopCounter + 1"/>
+
+            <!-- Transfer to loyalty Default -->
+            <if cond = "loopCounter &gt; 0">
+                <assign name="numberToDial" expr="noinputVDN"/>
+                <assign name="audioFileName" expr="'_Transfer_2.ulaw'"/>
+                <goto next="#frmTransfer"/>
+            </if>
+
+
+            <prompt bargein="false" timeout="1s">
+                <audio src="../audios/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmCustomerLoyalty"/>
+
+        </noinput>
+
+        <nomatch>
+            <!--Skip this for agent assist-->
+            <assign name="loopCounter" expr="loopCounter + 1"/>
+
+            <!-- Transfer to customer Loyalty Default -->
+            <if cond = "loopCounter &gt; 2">
+                <assign name="numberToDial" expr="custLoyalty5"/>
+                <assign name="audioFileName" expr="'_Transfer_2.ulaw'"/>
+                <goto next="#frmTransfer"/>
+            </if>
+
+            <prompt bargein="false" timeout="1s">
+                <audio src="../audios/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmCustomerLoyalty"/>
+
+        </nomatch>
+    </form>
+
+
+
+    <!--frmBilling-->        
+    <form id="frmBilling">
+        <object name="GetValue" classid="TEL_GetGlobalString">
+            <param name="ARC_param_globalVariable" value="$DISCONNECT_TIME" />
+        </object> 
+        <block>
+            <assign name="callActive" expr="GetValue.value" />
+            <if cond="callActive != '-1'">
+                <goto next="#logHangupCEV"/>
+            </if>
+        </block>
+        <catch event="connection.disconnect.hangup">
+            <goto next="#logHangupCEV" />
+        </catch>
+        <property name="completetimeout" value="0.1s"/>
+        <property name="incompletetimeout" value="1s"/>
+
+
+        <block>
+            <assign name="exitState" expr="'Billing'"/>
+            <if cond = "specialTransferVDN ==specialVDN6">
+                <assign name="numberToDial" expr="specialVDN6"/>
+                <assign name="audioFileName" expr="'_GotitTransfer_2.ulaw'"/>
+                <goto next="#frmTransfer"/>
+                <elseif cond = "specialTransferVDN ==specialVDN11"/>
+                <assign name="cancelFlag" expr="true"/>
+                <elseif cond = "specialTransferVDN ==specialVDN14"/>
+                <assign name="numberToDial" expr="specialVDN14"/>
+                <assign name="audioFileName" expr="'_GotitTransfer_2.ulaw'"/>
+                <goto next="#frmTransfer"/>
+                <!--                <prompt>
+                                    cancelFlag in main billing <value expr="cancelFlag"/>
+                                </prompt>-->
+            </if>
+            <if cond ="loopCounter==0">
+
+
+                <prompt bargein="false" timeout="30s">
+                    <!--<audio src="../audios/BillingPrompt_1.wav" />-->
+                    <audio src="../audios/Updated_Billing_Menu.wav" />
+                </prompt>
+            </if>
+            <if cond ="loopCounter &gt; 0">
+                <prompt bargein="true" timeout="30s">
+                    <!--<audio src="../audios/BillingPrompt_1.wav" />-->
+                    <audio src="../audios/Updated_Billing_Menu.wav" />
+                </prompt>
+
+            </if>
+
+        </block>
+        <field name="fldInput">
+            <grammar type="application/srgs+xml" src="../grammars/billing.grxml"/>
+
+            <filled>
+                <assign name="pageName" expr="'billing'"/>
+                <assign name="inputValue" expr="fldInput"/>
+                <var name="utter" expr="fldInput$.utterance"/>
+                <assign name="inputValue" expr="fldInput"/>
+                <if cond = "fldInput == 'disconnect' &amp;&amp; cancelFlag == true ">
+                    <assign name="numberToDial" expr="specialVDN11"/>
+                    <assign name="audioFileName" expr="'gotitTransfer_2.ulaw'"/>
+                    <goto next="#frmTransfer"/>
+                    <!--                    <elseif cond = "fldInput == 'payment'"/>
+                                        <prompt>You have send text link</prompt>
+                                        <goto next="#frmChkMobile"/>-->
+                    <else/>
+                    <goto next="#frmProcessMenu"/>
+                </if>
+                <!--<goto next="#frmProcessMenu"/>-->
+            </filled>
+
+        </field>
+
+        <noinput>
+            <assign name="loopCounter" expr="loopCounter + 1"/>
+
+            <!-- Transfer to Billing Default -->
+            <if cond = "loopCounter &gt; 2">
+                <assign name="numberToDial" expr="noinputVDN"/>
+                <assign name="audioFileName" expr="'_Transfer_2.ulaw'"/>
+                <goto next="#frmTransfer"/>
+            </if>
+
+            <prompt bargein="false" timeout="1s">
+                <audio src="../audios/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmBilling"/>
+
+        </noinput>
+
+        <nomatch>
+            <assign name="loopCounter" expr="loopCounter + 1"/>
+
+            <!-- Transfer to Billing Default -->
+            <if cond = "loopCounter &gt; 0">
+
+                <!--call InvokeAgentAPI here-->
+                <assign name="pageName" expr="'Billing'"/>
+                <assign name="recordedFileName" expr="application.lastresult$.utteranceFilename"/>
+                <assign name="grammarName" expr="'billing.grxml'"/>
+                <assign name="audioPhrase" expr="'percolate60s_new.vox'"/>
+                <if cond="logType == 'V' || logType == 'v'">
+                    <log expr="'VVR|'+logType+'|WEB |'+'|'+'pageName:'+pageName+'|recordedFileName:'+recordedFileName+'|status:'+status+'|grammarName:'+grammarName+'|appUrl:'+appUrl+'|audioPhrase:'+audioPhrase+'|defaultVDN:'+defaultVDN+'|waitForAgentCounter:'+waitForAgentCounter+'|callBackJSP:'+callBackJSP+'|submit to InvokeAgentAPI.jsp from frmhBilling in decision.jsp'+'|'+logMessage"></log>
+                </if>
+                <submit next="<%=agentAssistURL%>InvokeAgentAPI.jsp" namelist="recordedFileName smartphone_cdr status grammarName pageName audioPhrase appUrl waitForAgentCounter defaultVDN callBackJSP specialTransferVDN primaryGateway secondaryGateway specialVDN11 cancelFlag CheckifMobileJSP smartphone_ani"/>
+            </if>
+
+            <prompt bargein="false" timeout="1s">
+                <audio src="../audios/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmBilling"/>
+
+        </nomatch>
+
+    </form>
+    <form id="frmChkMobile">
+        <!--        <block>
+                    <prompt>inside check Mobile IVR</prompt>
+                </block>-->
+        <var name="ani" expr="smartphone_ani"/>
+        <block>
+            <log expr="'<%=smartphone_ani%>'">ANI inside check mobile</log>
+        </block>
+        <subdialog 
+            name="ChkMobile" 
+            method="post" 
+            src="<%=webServer%><%=appName%>/vxml/CheckIfMobile.jsp"
+            namelist="ani">
+        </subdialog>
+        <block>
+            <!--<prompt>After check Mobile</prompt>-->
+            <goto next="#frmProcessMenu"/>
+        </block>
+
+    </form>
+
+
+    <!--frmAccountChanges-->        
+    <form id="frmAccountChanges">
+        <object name="GetValue" classid="TEL_GetGlobalString">
+            <param name="ARC_param_globalVariable" value="$DISCONNECT_TIME" />
+        </object> 
+        <block>
+            <assign name="callActive" expr="GetValue.value" />
+            <if cond="callActive != '-1'">
+                <goto next="#logHangupCEV"/>
+            </if>
+        </block>
+        <catch event="connection.disconnect.hangup">
+            <goto next="#logHangupCEV" />
+        </catch>
+        <property name="completetimeout" value="0.1s"/>
+        <property name="incompletetimeout" value="1s"/>
+
+        <block>
+            <assign name="exitState" expr="'AccountChanges'"/>
+            <if cond = "specialTransferVDN == specialVDN6">
+                <assign name="numberToDial" expr="specialVDN6"/>
+                <assign name="audioFileName" expr="'_GotitTransfer_2.ulaw'"/>
+                <goto next="#frmTransfer"/>
+                <elseif cond = "specialTransferVDN ==specialVDN11"/>
+                <assign name="cancelFlag" expr="true"/>
+            </if>
+            <if cond ="loopCounter==0">
+                <prompt bargein="false" timeout="30s">
+                    <!--<audio src="../audios/MakeAccountChangesUpdated_1.wav" />-->
+                    <audio src="../audios/Updated_Make_Account_Changes_Menu.wav" />
+                </prompt>
+            </if>
+            <if cond ="loopCounter &gt; 0">
+                <prompt bargein="true" timeout="30s">
+                    <!--<audio src="../audios/MakeAccountChangesUpdated_1.wav" />-->
+                    <audio src="../audios/Updated_Make_Account_Changes_Menu.wav" />
+                </prompt>
+
+            </if>
+
+        </block>
+        <field name="fldInput">
+            <grammar type="application/srgs+xml" src="../grammars/accountChanges.grxml"/>
+
+            <filled>
+                <log label="<%=webServer%><%=appName%>|<%=smartphone_ani%>|<%=smartphone_cdr%>|<%=jspName%>|frmAccountChanges"
+                     expr="'User said: '+fldInput">
+                </log>
+
+                <var name="utter" expr="fldInput$.utterance"/> 
+
+                <assign name="pageName" expr="'accountChanges'"/>
+                <assign name="inputValue" expr="fldInput"/>
+                <if cond = "fldInput == 'disconnect' &amp;&amp; cancelFlag == true ">
+                    <assign name="numberToDial" expr="specialVDN11"/>
+                    <assign name="audioFileName" expr="'gotitTransfer_2.ulaw'"/>
+                    <goto next="#frmTransfer"/>
+                    <else/>
+                    <goto next="#frmProcessMenu"/>
+                </if>
+                <!--<goto next="#frmProcessMenu"/>-->			
+
+                <!-- Commenting below code [Ankush: 2016-01-15]
+                -->
+            </filled>
+
+        </field>
+
+        <noinput>
+            <assign name="loopCounter" expr="loopCounter + 1"/>
+
+            <!-- Transfer to Something_Else Default -->
+            <if cond = "loopCounter &gt; 2">
+                <assign name="numberToDial" expr="noinputVDN"/>
+                <assign name="audioFileName" expr="'_Transfer_2.ulaw'"/>
+                <goto next="#frmTransfer"/>
+            </if>
+
+            <prompt bargein="false" timeout="1s">
+                <audio src="../audios/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmAccountChanges"/>
+
+        </noinput>
+
+        <nomatch>
+            <assign name="loopCounter" expr="loopCounter + 1"/>
+
+            <!-- Transfer to Something_Else Default -->
+            <if cond = "loopCounter &gt; 0">
+
+                <!--call InvokeAgentAPI here-->
+                <assign name="pageName" expr="'AccountChanges'"/>
+                <assign name="recordedFileName" expr="application.lastresult$.utteranceFilename"/>
+                <assign name="grammarName" expr="'accountChanges.grxml'"/>
+                <assign name="audioPhrase" expr="'percolate60s_new.vox'"/>
+                <if cond="logType == 'V' || logType == 'v'">
+                    <log expr="'VVR|'+logType+'|WEB |'+'|'+'pageName:'+pageName+'|recordedFileName:'+recordedFileName+'|status:'+status+'|grammarName:'+grammarName+'|appUrl:'+appUrl+'|audioPhrase:'+audioPhrase+'|defaultVDN:'+defaultVDN+'|waitForAgentCounter:'+waitForAgentCounter+'|callBackJSP:'+callBackJSP+'|submit to InvokeAgentAPI.jsp from frmAccountChange in decision.jsp'+'|'+logMessage"></log>
+                </if>
+                <submit next="<%=agentAssistURL%>InvokeAgentAPI.jsp" namelist="recordedFileName smartphone_cdr status grammarName pageName audioPhrase appUrl waitForAgentCounter defaultVDN callBackJSP specialTransferVDN primaryGateway secondaryGateway specialVDN11 cancelFlag"/>
+            </if>
+
+            <prompt bargein="false" timeout="1s">
+                <audio src="../audios/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmAccountChanges"/>
+
+        </nomatch>
+
+    </form>
+
+
+
+    <form id="frmTechnicalSupport">
+        <object name="GetValue" classid="TEL_GetGlobalString">
+            <param name="ARC_param_globalVariable" value="$DISCONNECT_TIME" />
+        </object> 
+        <block>
+            <assign name="callActive" expr="GetValue.value" />
+            <if cond="callActive != '-1'">
+                <goto next="#logHangupCEV"/>
+            </if>
+        </block>
+        <catch event="connection.disconnect.hangup">
+            <goto next="#logHangupCEV" />
+        </catch>
+        <property name="completetimeout" value="0.1s"/>
+        <property name="incompletetimeout" value="1s"/>
+
+
+        <block>
+
+            <assign name="exitState" expr="'TechnicalSupport'"/>
+            <if cond = "specialTransferVDN ==specialVDN5">
+                <assign name="numberToDial" expr="specialVDN5"/>
+                <assign name="audioFileName" expr="'_GotitTransfer_2.ulaw'"/>
+                <goto next="#frmTransfer"/>
+                <elseif cond = "specialTransferVDN ==specialVDN11"/>
+                <assign name="cancelFlag" expr="true"/>
+            </if>
+            <if cond = "loopCounter == 0">
+                <prompt bargein="false" timeout="4s">
+                    <audio src="../audios/Ok.ulaw" />
+                </prompt>
+                <prompt bargein="false" timeout="30s">
+                    <!--<audio src="../audios/TechnicalSupport_StewartCummings.ulaw" />-->
+                    <audio src="../audios/Equipment_Options#1.wav" />
+                </prompt>
+            </if>
+            <if cond = "loopCounter &gt; 0">
+                <prompt bargein="true" timeout="30s">
+                    <!--<audio src="../audios/TechnicalSupport_StewartCummings.ulaw" />-->
+                    <audio src="../audios/Equipment_Options#1.wav" />
+                </prompt>
+            </if>
+
+        </block>
+
+        <field name="fldInput">
+
+            <grammar type="application/srgs+xml" src="../grammars/equipment.grxml"/>
+
+            <filled>
+                <var name="utter" expr="fldInput$.utterance"/> 
+
+                <assign name="pageName" expr="'equipment'"/>
+                <assign name="inputValue" expr="fldInput"/>
+                <if cond = "fldInput == 'disconnect' &amp;&amp; cancelFlag == true ">
+                    <assign name="numberToDial" expr="specialVDN11"/>
+                    <assign name="audioFileName" expr="'gotitTransfer_2.ulaw'"/>
+                    <goto next="#frmTransfer"/>
+                    <else/>
+                    <goto next="#frmProcessMenu"/>
+                </if>
+                <!--<goto next="#frmProcessMenu"/>-->
+            </filled>
+
+        </field>
+
+        <noinput>
+
+            <assign name="loopCounter" expr="loopCounter + 1"/>
+
+            <if cond = "loopCounter &gt; 1">
+                <assign name="numberToDial" expr="noinputVDN"/>
+                <assign name="audioFileName" expr="'_Transfer_2.ulaw'"/>
+                <goto next="#frmTransfer"/>
+            </if>
+
+
+            <prompt bargein="false" timeout="1s">
+                <audio src="../audios/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmTechnicalSupport"/>
+
+        </noinput>
+
+        <nomatch>
+            <assign name="loopCounter" expr="loopCounter + 1"/>
+
+            <!-- Transfer to Technical Support default -->
+            <if cond = "loopCounter &gt; 0">
+
+                <!--call InvokeAgentAPI here-->
+                <assign name="pageName" expr="'TechnicalSupport'"/>
+                <assign name="recordedFileName" expr="application.lastresult$.utteranceFilename"/>
+                <assign name="grammarName" expr="'equipment.grxml'"/>
+                <assign name="audioPhrase" expr="'percolate60s_new.vox'"/>
+                <if cond="logType == 'V' || logType == 'v'">
+                    <log expr="'VVR|'+logType+'|WEB |'+'|'+'pageName:'+pageName+'|recordedFileName:'+recordedFileName+'|status:'+status+'|grammarName:'+grammarName+'|appUrl:'+appUrl+'|audioPhrase:'+audioPhrase+'|defaultVDN:'+defaultVDN+'|waitForAgentCounter:'+waitForAgentCounter+'|callBackJSP:'+callBackJSP+'|submit to InvokeAgentAPI.jsp from frmTechnicalSupport in decision.jsp'+'|'+logMessage"></log>
+                </if>
+                <submit next="<%=agentAssistURL%>InvokeAgentAPI.jsp" namelist="recordedFileName smartphone_cdr status grammarName pageName audioPhrase appUrl waitForAgentCounter defaultVDN callBackJSP specialTransferVDN primaryGateway secondaryGateway specialVDN11 cancelFlag"/>
+            </if>
+
+            <prompt bargein="false" timeout="1s">
+                <audio src="../audios/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmTechnicalSupport"/>
+
+        </nomatch>
+
+    </form>
+    <form id="frmCamera">
+        <object name="GetValue" classid="TEL_GetGlobalString">
+            <param name="ARC_param_globalVariable" value="$DISCONNECT_TIME" />
+        </object> 
+        <block>
+            <assign name="callActive" expr="GetValue.value" />
+            <if cond="callActive != '-1'">
+                <goto next="#logHangupCEV"/>
+            </if>
+        </block>
+        <catch event="connection.disconnect.hangup">
+            <goto next="#logHangupCEV" />
+        </catch>
+        <property name="completetimeout" value="0.1s"/>
+        <property name="incompletetimeout" value="1s"/>
+
+
+        <block>
+
+            <assign name="exitState" expr="'camera'"/>
+            <if cond = "loopCounter == 0">
+                <prompt bargein="false" timeout="30s">
+                    <audio src="../audios/CameraOption_1.wav" />
+                </prompt>
+            </if>
+            <if cond = "loopCounter &gt; 0">
+                <prompt bargein="true" timeout="30s">
+                    <audio src="../audios/CameraOption_1.wav" />
+                </prompt>
+            </if>
+
+        </block>
+
+        <field name="fldInput">
+            <grammar type="application/srgs+xml" src="../grammars/camera.grxml"/>
+            <filled>
+                <var name="utter" expr="fldInput$.utterance"/> 
+                <assign name="pageName" expr="'camera'"/>
+                <assign name="inputValue" expr="fldInput"/>
+                <goto next="#frmProcessMenu"/>
+            </filled>
+
+        </field>
+
+        <noinput>
+<!--            <log label="<%=webServer%><%=appName%>|<%=smartphone_ani%>|<%=smartphone_cdr%>|<%=jspName%>|frmTechnicalSupport">
+                User didn't give any input and goto frmTechnicalSupport
+            </log>-->
+
+            <assign name="loopCounter" expr="loopCounter + 1"/>
+
+            <if cond = "loopCounter &gt; 1">
+                <assign name="numberToDial" expr="cameraVDN"/>
+                <assign name="audioFileName" expr="'_Transfer_2.ulaw'"/>
+                <goto next="#frmTransfer"/>
+            </if>
+
+
+            <prompt bargein="false" timeout="1s">
+                <audio src="/home/arc/.ISP/Telecom/phrases/VivintVIVR/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmCamera"/>
+
+        </noinput>
+
+        <nomatch>
+            <assign name="loopCounter" expr="loopCounter + 1"/>
+
+            <!-- Transfer to Technical Support default -->
+            <if cond = "loopCounter &gt; 0">
+
+                <!--call InvokeAgentAPI here-->
+                <assign name="pageName" expr="'TechnicalSupport'"/>
+                <assign name="recordedFileName" expr="application.lastresult$.utteranceFilename"/>
+                <assign name="grammarName" expr="'camera.grxml'"/>
+                <assign name="audioPhrase" expr="'percolate60s_new.vox'"/>
+                <if cond="logType == 'V' || logType == 'v'">
+                    <log expr="'VVR|'+logType+'|WEB |'+'|'+'pageName:'+pageName+'|recordedFileName:'+recordedFileName+'|status:'+status+'|grammarName:'+grammarName+'|appUrl:'+appUrl+'|audioPhrase:'+audioPhrase+'|defaultVDN:'+defaultVDN+'|waitForAgentCounter:'+waitForAgentCounter+'|callBackJSP:'+callBackJSP+'|submit to InvokeAgentAPI.jsp from frmCamera in decision.jsp'+'|'+logMessage"></log>
+                </if>
+                <submit next="<%=agentAssistURL%>InvokeAgentAPI.jsp" namelist="recordedFileName smartphone_cdr status grammarName pageName audioPhrase appUrl waitForAgentCounter defaultVDN callBackJSP specialTransferVDN primaryGateway secondaryGateway"/>
+            </if>
+
+            <prompt bargein="false" timeout="1s">
+                <audio src="../audios/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmCamera"/>
+
+        </nomatch>
+
+    </form>
+
+    <form id="frmEquipAcessible">
+        <object name="GetValue" classid="TEL_GetGlobalString">
+            <param name="ARC_param_globalVariable" value="$DISCONNECT_TIME" />
+        </object> 
+        <block>
+            <assign name="callActive" expr="GetValue.value" />
+            <if cond="callActive != '-1'">
+                <goto next="#logHangupCEV"/>
+            </if>
+        </block>
+        <catch event="connection.disconnect.hangup">
+            <goto next="#logHangupCEV" />
+        </catch>
+        <property name="completetimeout" value="0.1s"/>
+        <property name="incompletetimeout" value="1s"/>
+
+
+        <block>
+
+            <assign name="exitState" expr="'EquipAcessible'"/>
+
+            <!-- Change added on 25-May-2016 Bug # to be added --> 
+            <if cond = "specialTransferVDN == specialVDN5">
+                <assign name="audioFileName" expr="'gotitTransfer_2.ulaw'"/>
+                <assign name="numberToDial" expr="specialTransferVDN"/>
+                <goto next="#frmTransfer" />
+            </if>
+
+            <if cond = "loopCounter == 0">
+                <prompt bargein="false" timeout="30s">
+                    <audio src="../audios/At_Home_First_Option.wav" />
+                </prompt>
+            </if>
+            <if cond = "loopCounter &gt; 0">
+                <prompt bargein="true" timeout="30s">
+                    <audio src="../audios/At_Home_First_Option.wav" />
+                </prompt>
+            </if>
+
+        </block>
+
+        <field name="fldInput">
+            <grammar type="application/srgs+xml" src="../grammars/EquipAcessible.grxml"/>
+            <filled>
+                <var name="utter" expr="fldInput$.utterance"/> 
+                <assign name="pageName" expr="'EquipAcessible'"/>
+                <assign name="inputValue" expr="fldInput"/>
+                <goto next="#frmProcessMenu"/>
+            </filled>
+
+        </field>
+
+        <noinput>
+            <log label="<%=webServer%><%=appName%>|<%=smartphone_ani%>|<%=smartphone_cdr%>|<%=jspName%>|frmTechnicalSupport">
+                <!--User didn't give any input and goto frmTechnicalSupport-->
+            </log>
+
+            <assign name="loopCounter" expr="loopCounter + 1"/>
+
+            <if cond = "loopCounter &gt; 1">
+                <assign name="numberToDial" expr="defaultVDN"/>
+                <assign name="audioFileName" expr="'_Transfer_2.ulaw'"/>
+                <goto next="#frmTransfer"/>
+            </if>
+
+
+            <prompt bargein="false" timeout="1s">
+                <audio src="/home/arc/.ISP/Telecom/phrases/VivintVIVR/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmEquipAcessible"/>
+
+        </noinput>
+
+        <nomatch>
+            <assign name="loopCounter" expr="loopCounter + 1"/>
+
+            <!--Transfer to Technical Support default--> 
+            <if cond = "loopCounter &gt; 0">
+
+                <!--call InvokeAgentAPI here-->
+                <assign name="pageName" expr="'EquipAcessible'"/>
+                <assign name="recordedFileName" expr="application.lastresult$.utteranceFilename"/>
+                <assign name="grammarName" expr="'EquipAcessible.grxml'"/>
+                <assign name="audioPhrase" expr="'percolate60s_new.vox'"/>
+                <if cond="logType == 'V' || logType == 'v'">
+                    <log expr="'VVR|'+logType+'|WEB |'+'|'+'pageName:'+pageName+'|recordedFileName:'+recordedFileName+'|status:'+status+'|grammarName:'+grammarName+'|appUrl:'+appUrl+'|audioPhrase:'+audioPhrase+'|defaultVDN:'+defaultVDN+'|waitForAgentCounter:'+waitForAgentCounter+'|callBackJSP:'+callBackJSP+'|submit to InvokeAgentAPI.jsp from frmCamera in decision.jsp'+'|'+logMessage"></log>
+                </if>
+                <submit next="<%=agentAssistURL%>InvokeAgentAPI.jsp" namelist="recordedFileName smartphone_cdr status grammarName pageName audioPhrase appUrl waitForAgentCounter defaultVDN callBackJSP specialTransferVDN primaryGateway secondaryGateway"/>
+            </if>
+
+            <prompt bargein="false" timeout="1s">
+                <audio src="../audios/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmEquipAcessible"/>
+
+        </nomatch>
+
+    </form>
+
+    <form id="frmReconfirmation">
+        <object name="GetValue" classid="TEL_GetGlobalString">
+            <param name="ARC_param_globalVariable" value="$DISCONNECT_TIME" />
+        </object> 
+        <block>
+            <assign name="callActive" expr="GetValue.value" />
+            <if cond="callActive != '-1'">
+                <goto next="#logHangupCEV"/>
+            </if>
+        </block>
+        <catch event="connection.disconnect.hangup">
+            <goto next="#logHangupCEV" />
+        </catch>
+        <property name="completetimeout" value="0.1s"/>
+        <property name="incompletetimeout" value="1s"/>
+
+
+        <block>
+
+            <assign name="exitState" expr="'Reconfirmation'"/>
+            <if cond = "loopCounter == 0">
+                <prompt bargein="false" timeout="30s">
+                    <audio src="../audios/At_Home_Second_Option.wav" />
+                </prompt>
+            </if>
+            <if cond = "loopCounter &gt; 0">
+                <prompt bargein="true" timeout="30s">
+                    <audio src="../audios/At_Home_Second_Option.wav" />
+                </prompt>
+            </if>
+
+        </block>
+
+        <field name="fldInput">
+            <grammar type="application/srgs+xml" src="../grammars/Reconfirmation.grxml"/>
+            <filled>
+                <var name="utter" expr="fldInput$.utterance"/> 
+                <assign name="pageName" expr="'Reconfirmation'"/>
+                <assign name="inputValue" expr="fldInput"/>
+                <goto next="#frmProcessMenu"/>
+            </filled>
+
+        </field>
+
+        <noinput>
+            <log label="<%=webServer%><%=appName%>|<%=smartphone_ani%>|<%=smartphone_cdr%>|<%=jspName%>|frmTechnicalSupport">
+                <!--User didn't give any input and goto frmTechnicalSupport-->
+            </log>
+
+            <assign name="loopCounter" expr="loopCounter + 1"/>
+
+            <if cond = "loopCounter &gt; 1">
+                <assign name="numberToDial" expr="defaultVDN"/>
+                <assign name="audioFileName" expr="'_Transfer_2.ulaw'"/>
+                <goto next="#frmTransfer"/>
+            </if>
+
+
+            <prompt bargein="false" timeout="1s">
+                <audio src="/home/arc/.ISP/Telecom/phrases/VivintVIVR/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmReconfirmation"/>
+
+        </noinput>
+
+        <nomatch>
+            <assign name="loopCounter" expr="loopCounter + 1"/>
+
+            <!--Transfer to Technical Support default--> 
+            <if cond = "loopCounter &gt; 0">
+
+                <!--call InvokeAgentAPI here-->
+                <assign name="pageName" expr="'HomeSecondOption'"/>
+                <assign name="recordedFileName" expr="application.lastresult$.utteranceFilename"/>
+                <assign name="grammarName" expr="'Reconfirmation.grxml'"/>
+                <assign name="audioPhrase" expr="'percolate60s_new.vox'"/>
+                <if cond="logType == 'V' || logType == 'v'">
+                    <log expr="'VVR|'+logType+'|WEB |'+'|'+'pageName:'+pageName+'|recordedFileName:'+recordedFileName+'|status:'+status+'|grammarName:'+grammarName+'|appUrl:'+appUrl+'|audioPhrase:'+audioPhrase+'|defaultVDN:'+defaultVDN+'|waitForAgentCounter:'+waitForAgentCounter+'|callBackJSP:'+callBackJSP+'|submit to InvokeAgentAPI.jsp from frmCamera in decision.jsp'+'|'+logMessage"></log>
+                </if>
+                <submit next="<%=agentAssistURL%>InvokeAgentAPI.jsp" namelist="recordedFileName smartphone_cdr status grammarName pageName audioPhrase appUrl waitForAgentCounter defaultVDN callBackJSP specialTransferVDN primaryGateway secondaryGateway"/>
+            </if>
+
+            <prompt bargein="false" timeout="1s">
+                <audio src="../audios/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmReconfirmation"/>
+
+        </nomatch>
+
+    </form>
+
+    <form id="frmDiscontinueService">
+        <object name="GetValue" classid="TEL_GetGlobalString">
+            <param name="ARC_param_globalVariable" value="$DISCONNECT_TIME" />
+        </object> 
+        <block>
+            <assign name="callActive" expr="GetValue.value" />
+            <if cond="callActive != '-1'">
+                <goto next="#logHangupCEV"/>
+            </if>
+        </block>
+        <catch event="connection.disconnect.hangup">
+            <goto next="#logHangupCEV" />
+        </catch>
+        <property name="completetimeout" value="0.1s"/>
+        <property name="incompletetimeout" value="1s"/>
+
+
+        <block>
+
+            <assign name="exitState" expr="'DiscontinueService'"/>
+            <if cond = "specialTransferVDN == specialVDN12">
+                <assign name="audioFileName" expr="'gotitTransfer_2.ulaw'"/>
+                <assign name="numberToDial" expr="specialTransferVDN"/>
+                <goto next="#frmTransfer" />
+            </if>
+            <if cond = "loopCounter == 0">
+                <prompt bargein="false" timeout="30s">
+                    <audio src="../audios/Discontue_Service_Question.wav" />
+                </prompt>
+            </if>
+            <if cond = "loopCounter &gt; 0">
+                <prompt bargein="true" timeout="30s">
+                    <audio src="../audios/Discontue_Service_Question.wav" />
+                </prompt>
+            </if>
+
+        </block>
+
+        <field name="fldInput">
+            <grammar type="application/srgs+xml" src="../grammars/DiscontinueService.grxml"/>
+            <filled>
+                <var name="utter" expr="fldInput$.utterance"/> 
+                <assign name="pageName" expr="'DiscontinueService'"/>
+                <assign name="inputValue" expr="fldInput"/>
+                <goto next="#frmProcessMenu"/>
+            </filled>
+
+        </field>
+
+        <noinput>
+            <log label="<%=webServer%><%=appName%>|<%=smartphone_ani%>|<%=smartphone_cdr%>|<%=jspName%>|frmDiscontinueService">
+                <!--User didn't give any input and goto frmTechnicalSupport-->
+            </log>
+
+            <assign name="loopCounter" expr="loopCounter + 1"/>
+
+            <if cond = "loopCounter &gt; 1">
+                <assign name="numberToDial" expr="defaultVDN"/>
+                <assign name="audioFileName" expr="'_Transfer_2.ulaw'"/>
+                <goto next="#frmTransfer"/>
+            </if>
+
+
+            <prompt bargein="false" timeout="1s">
+                <audio src="/home/arc/.ISP/Telecom/phrases/VivintVIVR/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmDiscontinueService"/>
+
+        </noinput>
+
+        <nomatch>
+            <assign name="loopCounter" expr="loopCounter + 1"/>
+
+            <!--Transfer to Technical Support default--> 
+            <if cond = "loopCounter &gt; 0">
+
+                <!--call InvokeAgentAPI here-->
+                <assign name="pageName" expr="'DiscontinueService'"/>
+                <assign name="recordedFileName" expr="application.lastresult$.utteranceFilename"/>
+                <assign name="grammarName" expr="'DiscontinueService.grxml'"/>
+                <assign name="audioPhrase" expr="'percolate60s_new.vox'"/>
+                <if cond="logType == 'V' || logType == 'v'">
+                    <log expr="'VVR|'+logType+'|WEB |'+'|'+'pageName:'+pageName+'|recordedFileName:'+recordedFileName+'|status:'+status+'|grammarName:'+grammarName+'|appUrl:'+appUrl+'|audioPhrase:'+audioPhrase+'|defaultVDN:'+defaultVDN+'|waitForAgentCounter:'+waitForAgentCounter+'|callBackJSP:'+callBackJSP+'|submit to InvokeAgentAPI.jsp from frmCamera in decision.jsp'+'|'+logMessage"></log>
+                </if>
+                <submit next="<%=agentAssistURL%>InvokeAgentAPI.jsp" namelist="recordedFileName smartphone_cdr status grammarName pageName audioPhrase appUrl waitForAgentCounter defaultVDN callBackJSP specialTransferVDN primaryGateway secondaryGateway"/>
+            </if>
+
+            <prompt bargein="false" timeout="1s">
+                <audio src="../audios/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmDiscontinueService"/>
+
+        </nomatch>
+
+    </form>        
+
+    <form id="frmRepresentative">
+        <object name="GetValue" classid="TEL_GetGlobalString">
+            <param name="ARC_param_globalVariable" value="$DISCONNECT_TIME" />
+        </object> 
+        <block>
+            <assign name="callActive" expr="GetValue.value" />
+            <if cond="callActive != '-1'">
+                <goto next="#logHangupCEV"/>
+            </if>
+        </block>
+        <catch event="connection.disconnect.hangup">
+            <goto next="#logHangupCEV" />
+        </catch>
+        <property name="completetimeout" value="0.1s"/>
+        <property name="incompletetimeout" value="1s"/>
+
+
+        <block>
+
+            <assign name="exitState" expr="'Representative'"/>
+            <if cond = "loopCounter == 0">
+                <prompt bargein="false" timeout="30s">
+                    <audio src="../audios/Representative_Question.wav" />
+                </prompt>
+            </if>
+            <if cond = "loopCounter &gt; 0">
+                <prompt bargein="true" timeout="30s">
+                    <audio src="../audios/Representative_Question.wav" />
+                </prompt>
+            </if>
+
+        </block>
+
+        <field name="fldInput">
+            <grammar type="application/srgs+xml" src="../grammars/Representative.grxml"/>
+            <filled>
+                <var name="utter" expr="fldInput$.utterance"/> 
+                <assign name="pageName" expr="'Representative'"/>
+                <assign name="inputValue" expr="fldInput"/>
+                <goto next="#frmProcessMenu"/>
+            </filled>
+
+        </field>
+
+        <noinput>
+            <log label="<%=webServer%><%=appName%>|<%=smartphone_ani%>|<%=smartphone_cdr%>|<%=jspName%>|frmDiscontinueService">
+                <!--User didn't give any input and goto frmTechnicalSupport-->
+            </log>
+
+            <assign name="loopCounter" expr="loopCounter + 1"/>
+
+            <if cond = "loopCounter &gt; 1">
+                <assign name="numberToDial" expr="defaultVDN"/>
+                <assign name="audioFileName" expr="'_Transfer_2.ulaw'"/>
+                <goto next="#frmTransfer"/>
+            </if>
+
+
+            <prompt bargein="false" timeout="1s">
+                <audio src="/home/arc/.ISP/Telecom/phrases/VivintVIVR/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmRepresentative"/>
+
+        </noinput>
+
+        <nomatch>
+            <assign name="loopCounter" expr="loopCounter + 1"/>
+
+            <!--Transfer to Technical Support default--> 
+            <if cond = "loopCounter &gt; 0">
+
+                <!--call InvokeAgentAPI here-->
+                <assign name="pageName" expr="'Representative'"/>
+                <assign name="recordedFileName" expr="application.lastresult$.utteranceFilename"/>
+                <assign name="grammarName" expr="'Representative.grxml'"/>
+                <assign name="audioPhrase" expr="'percolate60s_new.vox'"/>
+                <if cond="logType == 'V' || logType == 'v'">
+                    <log expr="'VVR|'+logType+'|WEB |'+'|'+'pageName:'+pageName+'|recordedFileName:'+recordedFileName+'|status:'+status+'|grammarName:'+grammarName+'|appUrl:'+appUrl+'|audioPhrase:'+audioPhrase+'|defaultVDN:'+defaultVDN+'|waitForAgentCounter:'+waitForAgentCounter+'|callBackJSP:'+callBackJSP+'|submit to InvokeAgentAPI.jsp from frmCamera in decision.jsp'+'|'+logMessage"></log>
+                </if>
+                <submit next="<%=agentAssistURL%>InvokeAgentAPI.jsp" namelist="recordedFileName smartphone_cdr status grammarName pageName audioPhrase appUrl waitForAgentCounter defaultVDN callBackJSP specialTransferVDN primaryGateway secondaryGateway"/>
+            </if>
+
+            <prompt bargein="false" timeout="1s">
+                <audio src="../audios/_NoMatchOrFailure1_2.ulaw" />
+            </prompt>
+
+            <goto next="#frmRepresentative"/>
+
+        </nomatch>
+
+    </form>
+
+    <form id="frmDisconnect">
+        <!--         <object name="GetValue" classid="TEL_GetGlobalString">
+                    <param name="ARC_param_globalVariable" value="$DISCONNECT_TIME" />
+                </object> 
+                <block>
+                    <assign name="callActive" expr="GetValue.value" />
+                    <if cond="callActive != '-1'">
+                        <goto next="#logHangupCEV"/>
+                    </if>
+                </block>-->
+        <!--        <block>
+                    <prompt>
+                        <audio src="../audios/ThankYou.wav" />
+                    </prompt>
+                    <goto next="#logHangupCEV"/>  
+                </block>-->
+        <object classid = "CDR_CustomEvent" name="frmHangup_call_outcome">
+            <param name = "ARC_param_cevData" expr = "':24::VivintVIVR::outcome=' + outcome + '$$$aa_finalActionTaken=' + outcome + '$$$exitType=Hangup$$$exitState=' + exitState" />
+            <param name = "ARC_param_cevEndOfData" value = "1" />
+            <param name = "ARC_param_cevDataType" value = "CEV_STRING" />
+        </object>
+        <block>
+            <if cond="logType == 'V' || logType == 'v'">
+                <log expr="'VVR|'+logType+'|WEB|2400|'+systemname+'|'+smartphone_cdr+'|'+portname+'|'+'Inside logHangupCEV of decision.jsp'+'|'+appName+logMessage"></log>
+            </if>
+            <exit/>
+        </block>
+    </form>
+
+
+    <form id="logHangupCEV">
+        <catch event="connection.disconnect.hangup">
+            <goto next="#frmDisconnect" />
+        </catch>
+        <block>
+            <if cond="logType == 'V' || logType == 'v'">
+                <log expr="'VVR|'+logType+'|WEB|2400|'+systemname+'|'+smartphone_cdr+'|'+portname+'|'+'Inside logHangupCEV of decision.jsp'+'|'+appName+logMessage"></log>
+            </if>
+            <submit next="<%=webServer%><%=appName%>/vxml/Hangup.jsp" namelist="smartphone_cdr exitState exitType"/>
+            <exit/>
+        </block>
+    </form>
+
+    <form id="frmProcessMenu">
+        <catch event="connection.disconnect.hangup">
+            <goto next="#logHangupCEV" />
+        </catch>
+        <object name="GetValue" classid="TEL_GetGlobalString">
+            <param name="ARC_param_globalVariable" value="$DISCONNECT_TIME" />
+        </object>
+        <var name="nextForm" expr="''"/>
+        <var name="nextAudioFileName" expr="''"/>
+        <var name="vdn" expr="''"/>
+
+        <block>
+            <assign name="callActive" expr="GetValue.value" />
+            <if cond="callActive != '-1'">
+                <goto next="#logHangupCEV"/>
+            </if>
+        </block>
+        <subdialog name="jsonValues" method="post" src="GetVdn.jsp" namelist="pageName inputValue jsonFile">
+            <filled>
+                <assign name="vdn" expr="jsonValues.VDN" />
+                <assign name="nextForm" expr="jsonValues.nextForm" />
+                <assign name="nextAudioFileName" expr="jsonValues.nextAudioFileName" />
+                <if cond="vdn != 'NA'">
+                    <assign name="numberToDial" expr="vdn"/>
+                </if>
+
+                <if cond="nextAudioFileName != 'NA'">
+                    <assign name="audioFileName" expr="nextAudioFileName"/>
+                </if>
+
+                <if cond = "nextForm == ''">
+                    <assign name="audioFileName" expr="'gotitTransfer_2.ulaw'"/>
+                    <assign name = "numberToDial" expr="defaultVDN"/>
+                    <goto next="#frmTransfer"/>
+
+                    <elseif cond="nextForm != 'NA'"/>
+
+                    <if cond="TechSupportXfer ==  specialVDN5"> 
+                        <assign name = "numberToDial" expr="specialVDN5"/>
+                        <goto next="#frmTransfer"/>
+                        <else/>
+                        <goto expr="'#'+nextForm"/>
+                    </if>
+
+                    <else/>
+                    <goto next="#frmTransfer"/>
+                </if>	
+            </filled>
+        </subdialog>
+    </form>
+    <form id="frmCEVPrimaryGateway">
+        <object classid = "CDR_CustomEvent" name="frmtransferCEV1">
+            <param name = "ARC_param_cevData" expr = "':24::VivintVIVR::outcome=transfer to agent'+numberToDial+primaryGateway+'$$$aa_finalActionTaken=transfer to agent'+numberToDial+primaryGateway+'$$$exitType=TRANSFER$$$exitState='+exitState+'_XFER'" />
+            <param name = "ARC_param_cevEndOfData" value = "1" />
+            <param name = "ARC_param_cevDataType" value = "CEV_STRING" />
+        </object>
+
+    </form>
+    <form id="frmCEVSecondaryGateway">
+        <object classid = "CDR_CustomEvent" name="frmtransferCEV1">
+            <param name = "ARC_param_cevData" expr = "':24::VivintVIVR::outcome=transfer to agent'+numberToDial+secondaryGateway+'$$$aa_finalActionTaken=transfer to agent'+numberToDial+primaryGateway+'$$$exitType=TRANSFER$$$exitState='+exitState+'_XFER'" />
+            <param name = "ARC_param_cevEndOfData" value = "1" />
+            <param name = "ARC_param_cevDataType" value = "CEV_STRING" />
+        </object>
+    </form>
+
+</vxml>

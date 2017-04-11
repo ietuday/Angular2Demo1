@@ -1,0 +1,5 @@
+<div>
+    <input type="text" class="" [(ngModel)]="username" placeholder="Username" autofocus name="username"/>
+</div>
+<button (click)="login()" [disabled]="username == ''">Login</button>
+<button (click)="dashboard()">Dashboard</button>

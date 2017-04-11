@@ -1,0 +1,48 @@
+import {Component, OnInit} from '@angular/core';
+import {Router} from '@angular/router';
+import {WebSocketService} from '../web-socket.service';
+
+@Component({
+    selector: 'app-dashboard',
+    templateUrl: './dashboard.component.html',
+    styleUrls: ['./dashboard.component.scss'],
+    providers: [WebSocketService]
+})
+export class DashboardComponent implements OnInit {
+
+    private sessionData: any[] = [];
+ 
+    constructor(private router: Router) {
+
+
+        WebSocketService.getInstance().sendMessage({
+            action: "registerDashboard",
+            message: {},
+            status: "Sent"
+        });
+        
+        WebSocketService.getInstance().sessionDataBehaviorSubject.subscribe(data => this.sessionDataBehaviorSubjectHandler(data));
+   WebSocketService.getInstance().loginStatusBehaviorSubject.subscribe(data => this.loginStatusBehaviorSubjectHandler(data));
+
+ }
+
+    ngOnInit() {
+    }
+
+    login() {
+        this.router.navigate(['/login']);
+    }
+
+    sessionDataBehaviorSubjectHandler(data) {
+        console.log("DashboardComponent: sessionDataBehaviorSubjectHandler: data", data);
+        if (data != undefined) {
+            if (data.length >= 0) {
+                this.sessionData = data;
+            }
+        }
+    }
+loginStatusBehaviorSubjectHandler(data){
+         console.log("DashboardComponent: loginStatusBehaviorSubjectHandler: data", data);
+}
+
+}

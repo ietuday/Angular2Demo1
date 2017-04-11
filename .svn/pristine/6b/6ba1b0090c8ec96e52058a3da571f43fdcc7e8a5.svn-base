@@ -1,0 +1,14 @@
+<p>
+  call works!
+</p>
+
+<div>
+    <h3>Status - {{status}}</h3>
+<p-radioButton name="group1"  value="Available" label="Available" [(ngModel)]="status"></p-radioButton>
+<p-radioButton name="group1"  value="Unavailable" label="Unavailable"  [(ngModel)]="status"></p-radioButton>
+<button pButton type="text" (click)="submitStatus()" label="Submit"></button>
+
+</div>
+
+
+<button (click)="logout()">Logout</button>

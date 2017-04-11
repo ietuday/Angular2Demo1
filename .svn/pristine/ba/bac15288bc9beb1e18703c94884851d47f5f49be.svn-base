@@ -1,0 +1,6 @@
+<span>username </span><span>available </span><span>cumulativeTime </span>
+<hr/>
+<div *ngFor="let session of sessionData">
+    <span>{{session.username}} </span><span *ngIf="session.available">available</span><span *ngIf="!session.available">Unavailable</span><span>{{session.cumulativeTime}} </span>
+</div>
+<button (click)="login()">Login</button>

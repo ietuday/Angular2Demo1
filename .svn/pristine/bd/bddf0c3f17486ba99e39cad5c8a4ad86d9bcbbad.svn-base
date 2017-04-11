@@ -1,0 +1,31 @@
+<vxml version="2.1" xmlns="http://www/w3/org/2001/vxml" xml:lang="en-US">
+    <var name="VDN" expr="'<%=VDN%>'"/>
+    <var name="callActive" expr="''"/>
+    <var name="exitState" expr="'<%=exitState%>'"/>
+    <var name="outcome" expr="'<%=outcome%>'"/>
+
+    <form id="GetTelcoTransferExtension">
+        <object name="GetValue" classid="TEL_GetGlobalString">
+            <param name="ARC_param_globalVariable" value="$DISCONNECT_TIME" />
+        </object> 
+        <block>
+            <assign name="callActive" expr="GetValue.value" />
+            <if cond="callActive != '-1'">
+                <goto next="#logHangupCEV"/>
+            </if>
+        </block>
+        <block>
+            <return namelist="VDN"/>
+        </block>		
+    </form>
+    <form id="logHangupCEV">
+        <object classid = "CDR_CustomEvent" name="frmHangup_call_outcome">
+            <param name = "ARC_param_cevData" expr = "':24::VivintVIVR::outcome=' + outcome + '$$$aa_finalActionTaken=' + outcome + '$$$exitType=Hangup$$$exitState=' + exitState" />
+            <param name = "ARC_param_cevEndOfData" value = "1" />
+            <param name = "ARC_param_cevDataType" value = "CEV_STRING" />
+        </object>
+        <block>
+            <exit/>
+        </block>
+    </form>
+</vxml>

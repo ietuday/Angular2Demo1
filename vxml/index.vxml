@@ -1,0 +1,92 @@
+<vxml version="2.1" xmlns="http://www/w3/org/2001/vxml" xml:lang="en-US">
+    <var name="smartphone_ani" expr="''"/>
+    <var name="smartphone_dnis" expr="''"/>
+    <var name="smartphone_cdr" expr="''"/>
+    <var name="portname" expr="''"/>
+    <var name="appName" expr="'<%=appName%>'"/>
+    <var name="logType" expr="'<%=logType%>'"/>
+    <var name="exitState" expr="'<%=exitState%>'"/>
+    <var name="outcome" expr="'<%=outcome%>'"/>
+    <var name="vxmlError" expr="''"/>
+    <var name="specialTransferVDN" expr="''"/>
+    <var name="logMessage" expr="'<%=logMessage%>'"/>
+    <var name="callRecPath" expr="'<%=callRecPath%>'"/>
+    <var name="callActive" expr="''"/>
+    <catch event="error.badfetch">
+        <prompt>
+            There is some technical Problem. Please try after some time.
+        </prompt>
+    </catch>
+
+    <catch event="connection.disconnect.hangup">
+        <assign name="vxmlError" expr="_event" />
+        <log expr="'VVR|'+logType+'|WEB|2400|systemname not found|'+smartphone_cdr+'|'+portname+'|'+'Caught Disconnect in index.jsp'+'|'+appName+'|[vxmlError:'+vxmlError+','+logMessage +']'"></log>    
+        <exit/>
+    </catch>
+
+    <form id="frmMain">
+        <object name="GetValue" classid="TEL_GetGlobalString">
+            <param name="ARC_param_globalVariable" value="$DISCONNECT_TIME" />
+        </object> 
+        <block>
+            <assign name="callActive" expr="GetValue.value" />
+            <if cond="callActive != '-1'">
+                <goto next="#logHangupCEV"/>
+            </if>
+        </block>
+        <block>
+            <if cond="logType == 'V' || logType == 'v'">
+                <log expr="'VVR|'+logType+'|WEB|2300|systemname not found'+'|'+smartphone_cdr+'|'+portname+'|'+'Call lands Inside frmMain of index.jsp'+'|'+appName+logMessage"></log>
+            </if>
+        </block>
+        <object classid="TEL_GetGlobalString" name="cdr" >
+            <param name="ARC_param_globalVariable" value="$CALL_CDR_KEY" />
+        </object>
+        <object classid = "TEL_GetGlobalString" name = "getPort">
+            <param value = "$PORT_NAME" name = "ARC_param_globalVariable" />
+        </object>
+        <block>
+            <assign name="smartphone_ani" expr="telephone.ani"/>
+            <assign name="smartphone_dnis" expr="telephone.dnis"/>
+            <assign name="smartphone_cdr" expr="cdr.value"/>
+            <assign name="portname" expr="getPort.value" />
+        </block>
+        <object name="setGlobal_RecordCall" classid="TEL_SetGlobalString">
+            <param name="ARC_param_globalVariable" value="$RECORD_CALL"/>
+            <param name="ARC_param_globalVariableValue" expr="callRecPath+cdr.value+ '.wav'"/>
+            <!--<param name="ARC_param_globalVariableValue" expr="'/home/arc/.ISP/Telecom/Exec/.recording/'+cdr.value+ '.wav'"/>-->
+        </object>
+
+        <object classid = "CDR_CustomEvent" name="frmHangupCEV1">
+            <param name = "ARC_param_cevData" expr = "':24::VivintVIVR::uui_result='+telephone.ani+'::incoming_tfn='+telephone.ani" />
+            <param name = "ARC_param_cevEndOfData" value = "1" />
+            <param name = "ARC_param_cevDataType" value = "CEV_STRING" />
+        </object>
+        <object classid = "CDR_CustomEvent" name="frmMainCEV2">
+            <param name = "ARC_param_cevData" expr = "':24::VivintVIVR::dnis='+ telephone.dnis" />
+            <param name = "ARC_param_cevEndOfData" value = "1" />
+            <param name = "ARC_param_cevDataType" value = "CEV_STRING" />
+        </object>
+        <block>
+            <if cond="logType == 'V' || logType == 'v'">
+                <log expr="'*****<%=webServer%>decision|VVR|'+logType+'|WEB|2300|systemname not found'+'|'+smartphone_cdr+'|'+portname+'|'+'Inside frmMain of index.jsp submit to decision.jsp'+'|'+appName+logMessage"></log>
+            </if>
+            <prompt>Submit to decision.jsp</prompt>
+            <submit next="<%=webServer%>decision" namelist="smartphone_cdr portname smartphone_ani smartphone_dnis specialTransferVDN"/>
+        </block>
+    </form>
+
+    <form id="logHangupCEV">
+        <block>
+        </block>
+        <object classid = "CDR_CustomEvent" name="frmHangup_call_outcome">
+            <param name = "ARC_param_cevData" expr = "':24::VivintVIVR::outcome=' + outcome + '$$$aa_finalActionTaken=' + outcome + '$$$exitType=Hangup$$$exitState=' + exitState" />
+            <param name = "ARC_param_cevEndOfData" value = "1" />
+            <param name = "ARC_param_cevDataType" value = "CEV_STRING" />
+        </object>
+        <block>
+            <exit/>
+        </block>
+    </form>
+
+</vxml>

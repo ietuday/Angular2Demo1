@@ -1,0 +1,37 @@
+<vxml version="2.0" xmlns="http://www.w3.org/2001/vxml" >
+
+    <var name="VDN" expr="'<%=VDN%>'" />
+    <var name="nextAudioFileName" expr="'<%=nextAudioFileName%>'" />
+    <var name="nextForm" expr="'<%=nextForm%>'" />
+    <var name="logMessage" expr="'<%=logMessage%>'" />
+    <var name="logType" expr="'<%=logType%>'" />
+    <var name="exitState" expr="'<%=exitState%>'"/>
+    <var name="outcome" expr="'<%=outcome%>'"/>
+    <var name="callActive" expr="''"/>
+    <form id="frmGetVdn">
+        <object name="GetValue" classid="TEL_GetGlobalString">
+            <param name="ARC_param_globalVariable" value="$DISCONNECT_TIME" />
+        </object> 
+        <block>
+            <assign name="callActive" expr="GetValue.value" />
+            <if cond="callActive != '-1'">
+                <goto next="#logHangupCEV"/>
+            </if>
+        </block>
+        <block>
+            <log expr="'VVR'+'|WEB|'+logType+'|'+'|GetVDN:'+logMessage">inside GetVdn.jsp</log>
+            <return namelist=" VDN nextAudioFileName nextForm" />
+        </block>
+
+    </form>
+    <form id="logHangupCEV">
+        <object classid = "CDR_CustomEvent" name="frmHangup_call_outcome">
+            <param name = "ARC_param_cevData" expr = "':24::VivintVIVR::outcome=' + outcome + '$$$aa_finalActionTaken=' + outcome + '$$$exitType=Hangup$$$exitState=' + exitState" />
+            <param name = "ARC_param_cevEndOfData" value = "1" />
+            <param name = "ARC_param_cevDataType" value = "CEV_STRING" />
+        </object>
+        <block>
+            <exit/>
+        </block>
+    </form>
+</vxml>
